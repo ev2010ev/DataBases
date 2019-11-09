@@ -1,0 +1,13 @@
+SHOW DATABASES;
+CREATE DATABASE example;
+USE example;
+CREATE TABLE IF NOT EXISTS users (
+id serial,
+name varchar(255) NOT NULL UNIQUE
+);
+
+mysqldump -u root -p example > example.sql
+
+mysql -u root -p -e CREATE DATABASE sample;
+
+mysql -u root -p sample < example.sql
