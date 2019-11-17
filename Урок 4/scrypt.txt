@@ -1,0 +1,100 @@
+use database vk;
+show tables;
+select*from users limit 10;
+select*from profiles limit 10;
+create temporary table sex (sex char(1));
+select*from sex;
+delete from sex;
+insert into sex values ('m'),('f');
+update profiles set sex = (select sex from sex order by rand() limit 1);
+select sex from sex;
+select sex from sex order by rand();
+update profiles set sex = (select sex from sex order by rand() limit 1); /* error 1175*/
+select*from messages limit 10;
+select count(*) from users;
+select*from users order by id desc limit 1;
+update messages set
+	from_user_id = floor(1+(rand()*1000)),
+    to_user_id = floor(1+(rand()*1000))
+    ;  /* error 1175*/
+select*from media limit 10;
+update media set user_id  = floor(1+(rand()*1000));  
+ALTER TABLE media MODIFY COLUMN metadata JSON;
+describe media;
+update media SET metadata = CONCAT('{"', filename, '":"', size, '"}');
+select*from media_types;
+delete from media_types;
+truncate media_types;
+insert into media_types (name) values
+('photo'),
+('video'),
+('audio')
+;
+update media set media_type_id = floor(1+(rand()*3));
+select*from friendship limit 10;
+select*from friendship where user_id=friend_id; 
+desc friendship;
+alter table users add column is_banned boolean after phone;
+alter table users add column is_active boolean default true after is_banned;
+desc users;
+update users set is_banned = true where id in (12,56,66,83);
+update users set is_active = false where id in (8,32,77,98);
+select*from users limit 10;
+desc friendship_statuses;
+insert into friendship_statuses values(default, "rejected");
+select*from friendship_statuses;
+alter table communities add column created_at timestamp default current_timestamp after name;
+alter table communities add column is_closed boolean after created_at;
+alter table communities add column cloused_at timestamp after is_closed;
+alter table communities add column user_id int unsigned;
+desc communities;
+update communities set is_closed = true where id in (3,14,27,56);
+update communities set cloused_at = now() where is_closed is true;
+update communities set user_id  = floor(1+(rand()*1000));
+select*from communities; 
+alter table communities_users add column is_banned boolean after user_id;
+alter table communities_users add column is_admin boolean after user_id;
+update communities_users set is_banned = true where user_id in (8,65,87);
+update communities_users set is_admin = true where user_id in (1,56,74,12,34);
+select*from communities_users;
+desc messages;
+alter table messages add column header varchar(255) after to_user_id;
+update messages set header = substring(body,1,50);
+alter table messages add column attached_media_id int unsigned after body;
+update messages set attached_media_id = (
+select id from media where user_id = from_user_id limit 1
+);
+create table relations(
+id int unsigned not null,
+user_id int unsigned not null,
+relative_id int unsigned not null,
+relations_status_id int unsigned not null
+);
+create table relations_status(
+id  int unsigned not null auto_increment primary key,
+name varchar(100)
+);
+insert into relations_status (name) values
+('son'),
+('daughter'),
+('mother'),
+('father'),
+('wife'),
+('husband')
+;
+insert into relations
+	select 
+		id,
+		floor(1+(rand()*1000)),
+		floor(1+(rand()*1000)),
+		floor(1+(rand()*6))
+    from users;
+truncate relations;
+insert into relations
+	select 
+		id,
+		floor(1+(rand()*1000)),
+		floor(1+(rand()*1000)),
+		floor(1+(rand()*6))
+    from relations_status;
+select*from relations;
