@@ -1,0 +1,24 @@
+/* HW5 task 1*/
+update users set created_at = now();
+update users set updated_at = now();
+select created_at, updated_at from users limit 10;
+/* HW5 task 2*/
+alter table users  modify created_at datetime DEFAULT CURRENT_TIMESTAMP not null;
+alter table users  modify updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP not null;
+describe users;
+select created_at, updated_at from users limit 10;
+/* HW5 task 3*/
+insert into storehouses_products (value)
+values(floor(0+(rand()*1000)));
+insert into storehouses_products (value)
+values (0);  
+select* from storehouses_products order by value desc;
+/* HW5 task 3*/
+/* HW5 task 4*/
+SELECT * FROM catalogs WHERE id IN (5, 1, 2) order by name;
+/* HW5 task 5*/
+select id, 
+avg(to_days(now())-to_days(birthday_at)) as age
+from users group by id;
+/* HW5 task 6*/
+select id,DAYNAME(birthday_at) as day_birthday, count(day_birthday) where day_birthday=dayname(now()) from users;
