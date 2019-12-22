@@ -1,0 +1,54 @@
+-- 1. Проанализировать какие запросы могут выполняться наиболее часто в процессе работы приложения и добавить необходимые индексы.
+use vk;
+create unique index  users_email_idx on users(email);
+create index users_phone_idx on users(phone);
+desc communities;
+create index user_id_idx on communities(user_id);
+desc communities_users;
+desc friendship;
+create index friendship_status_id_idx on friendship(status_id);
+create index friendship_user_id_friendship_friend_id_idx on friendship(user_id,friend_id);
+desc likes;
+create index likes_target_id_idx on likes(target_id);
+desc media;
+create index media_user_id_media_type_id_idx on media(user_id,media_type_id);
+desc messages;
+desc profiles;
+create index profiles_birthday_idx on profiles(birthday);
+create index profiles_sex_idx on profiles(sex);
+
+-- 2. Задание на оконные функции
+-- Построить запрос, который будет выводить следующие столбцы:
+-- имя группы
+-- среднее количество пользователей в группах
+-- самый молодой пользователь в группе
+-- самый пожилой пользователь в группе
+-- общее количество пользователей в группе
+-- всего пользователей в системе
+-- отношение в процентах (общее количество пользователей в группе / всего пользователей в системе) * 100
+SELECT DISTINCT 
+  communities.name AS group_name,
+  COUNT(communities_users.user_id) OVER() 
+    / (SELECT COUNT(*) FROM communities) AS avg_users_in_groups,
+  FIRST_VALUE(users.first_name) 
+    OVER birthday_desc AS youngest_first_name,
+  FIRST_VALUE(users.last_name) 
+    OVER birthday_desc AS youngest_last_name,
+  FIRST_VALUE(users.first_name) 
+    OVER birthday_asc AS oldest_first_name,
+  FIRST_VALUE(users.last_name) 
+    OVER birthday_asc AS oldest_last_name,
+  COUNT(communities_users.user_id) 
+    OVER(PARTITION BY communities.id) AS users_in_groups,
+  COUNT(communities_users.user_id) OVER() AS users_total,
+  COUNT(communities_users.user_id) OVER(PARTITION BY communities.id) 
+    / COUNT(communities_users.user_id) OVER() *100 AS '%%'
+    FROM communities
+      JOIN communities_users 
+        ON communities_users.community_id = communities.id
+      JOIN users 
+        ON communities_users.user_id = users.id
+      JOIN profiles 
+        ON profiles.user_id = users.id
+      WINDOW birthday_desc AS (PARTITION BY communities.id ORDER BY profiles.birthday DESC),
+             birthday_asc AS (PARTITION BY communities.id ORDER BY profiles.birthday);
