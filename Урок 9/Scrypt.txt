@@ -1,0 +1,97 @@
+-- ДЗ к уроку 9
+
+-- Практическое задание по теме “Транзакции, переменные, представления”
+
+-- 1.В базе данных shop и sample присутствуют одни и те же таблицы, учебной базы данных.
+-- Переместите запись id = 1 из таблицы shop.users в таблицу sample.users.
+-- Используйте транзакции.
+show tables;
+SELECT * FROM shop.users;
+SELECT * FROM sample.users;
+
+START TRANSACTION;
+INSERT INTO sample.users SELECT * FROM shop.users WHERE id = 1;
+DELETE FROM shop.users WHERE id = 1 LIMIT 1;
+COMMIT;
+-- 2.Создайте представление, которое выводит название name товарной
+-- позиции из таблицы products и соответствующее название каталога name
+-- из таблицы catalogs.
+
+
+CREATE OR REPLACE VIEW products_catalogs AS
+SELECT
+  p.name AS product,
+  c.name AS catalog
+FROM
+  products AS p
+JOIN
+  catalogs AS c
+ON
+  p.catalog_id = c.id;
+  select* from products_catalogs;
+  
+  
+-- Практическое задание по теме “Администрирование MySQL” (эта тема изучается по вашему желанию)
+
+-- 1.Создайте двух пользователей которые имеют доступ к базе данных shop.
+-- Первому пользователю shop_read должны быть доступны только запросы на чтение данных,
+-- второму пользователю shop — любые операции в пределах базы данных shop.
+
+CREATE USER 'shop_read'@'localhost';
+GRANT SELECT, SHOW VIEW ON shop.* TO 'shop_read'@'localhost' IDENTIFIED BY '';
+
+SHOW DATABASES;
+USE shop;
+SHOW TABLES;
+SELECT * FROM catalogs;
+INSERT INTO catalogs (name) VALUES ('Оперативная память');
+
+CREATE USER 'shop'@'localhost';
+GRANT ALL ON shop.* TO 'shop'@'localhost' IDENTIFIED BY '';
+
+-- Практическое задание по теме “Хранимые процедуры и функции, триггеры"
+
+-- 2. (по желанию) Пусть имеется таблица accounts содержащая три столбца id, name, password,
+-- содержащие первичный ключ, имя пользователя и его пароль. Создайте представление
+-- username таблицы accounts, предоставляющий доступ к столбца id и name. Создайте
+-- пользователя user_read, который бы не имел доступа к таблице accounts, однако, мог бы
+-- извлекать записи из представления username.
+
+DROP TABLE IF EXISTS accounts;
+CREATE TABLE accounts (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255),
+  password VARCHAR(255)
+);
+
+INSERT INTO accounts (name, password) VALUES
+  ('Геннадий', 'Qt3X08VetW'),
+  ('Наталья', 'hvg0b057Br'),
+  ('Александр', 'a4YGUJjRLk'),
+  ('Сергей', 'YYug1IeyWl'),
+  ('Иван', 'oKoo7KXvTE'),
+  ('Мария', 'w5r4yvfo9f');
+
+CREATE VIEW username AS SELECT id, name FROM accounts;
+
+SELECT * FROM username;
+
+CREATE USER 'user_read'@'localhost';
+GRANT SELECT (id, name) ON shop.username TO 'user_read'@'localhost';
+
+-- 3.Напишите хранимую функцию для вычисления произвольного числа Фибоначчи. 
+-- Числами Фибоначчи называется последовательность в которой число равно сумме двух предыдущих чисел.
+-- # Вызов функции FIBONACCI(10) должен возвращать число 55.
+
+DELIMITER //
+
+CREATE FUNCTION FIBONACCI(num INT)
+RETURNS INT DETERMINISTIC
+BEGIN
+  DECLARE fs DOUBLE;
+  SET fs = SQRT(5);
+
+  RETURN (POW((1 + fs) / 2.0, num) + POW((1 - fs) / 2.0, num)) / fs;
+END//
+
+SELECT FIBONACCI(10)//
